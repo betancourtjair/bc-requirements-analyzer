@@ -645,29 +645,15 @@ def sidebar() -> tuple[str | None, str, str]:
     with st.sidebar:
         st.header("⚙️ Configuración")
 
-        secret_key = get_secret_api_key()
-        options = ["🔐 Secret de la nube", "⌨️ Ingresar manualmente"]
-        mode = st.radio(
-            "Origen de la API Key de Gemini",
-            options,
-            index=0 if secret_key else 1,
-            help="En producción usa el Secret GEMINI_API_KEY configurado en Streamlit Cloud.",
-        )
-
-        api_key: str | None = None
-        if mode == options[0]:
-            if secret_key:
-                st.success("Secret GEMINI_API_KEY detectado.")
-                api_key = secret_key
-            else:
-                st.error("No hay un Secret GEMINI_API_KEY configurado en el servidor.")
+        # La API Key se toma del Secret GEMINI_API_KEY; el usuario final nunca la ve ni la captura.
+        api_key = get_secret_api_key()
+        if api_key:
+            st.success("✅ Conectado a Gemini")
         else:
-            manual = st.text_input(
-                "API Key de Gemini", type="password", placeholder="AIza…",
-                help="Se usa solo durante tu sesión; no se guarda.",
+            st.error(
+                "Falta configurar el Secret GEMINI_API_KEY en Streamlit Cloud "
+                "(Settings → Secrets). Contacta al administrador."
             )
-            api_key = manual.strip() or None
-            st.caption("Obtén una en [Google AI Studio](https://aistudio.google.com/apikey).")
 
         st.divider()
         project_title = st.text_input("Título del proyecto", value="Análisis de Requerimiento BC")
@@ -707,7 +693,7 @@ def main() -> None:
 
     if run:
         if not api_key:
-            st.error("Configura una API Key de Gemini en el panel lateral.")
+            st.error("La app no tiene configurada la API Key de Gemini. Contacta al administrador.")
             st.stop()
         if len(requirement.strip()) < 30:
             st.warning("Describe el requerimiento con más detalle (mínimo 30 caracteres).")
